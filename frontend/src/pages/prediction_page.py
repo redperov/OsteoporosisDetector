@@ -31,13 +31,13 @@ class PredictionPage(tk.Frame):
 
     def upload_image(self):
         try:
-            filename = Path(r"C:\Users\Danny\Desktop\resources\databases\knee dataset\normal_2\2.jpg")
+            filename = Path(r"C:\Users\perov\OneDrive\Desktop\N1.JPEG")
             # TODO uncomment
             # filename = filedialog.askopenfilename(initialdir="/", title="Select an Image",
             #                                       filetypes=(("jpeg files", "*.jpg"), ("all files", "*.*")))
             self._display_predict_result(filename)
         except Exception as e:
-            self.info_label.config(text="Error! please try again")
+            messagebox.showerror("Error", "Error! please try again")
             print("Failed to predict on an image due to:", e)
 
     def save_result(self, image, prediction):
@@ -62,7 +62,7 @@ class PredictionPage(tk.Frame):
         image = Image.open(filename)
 
         try:
-            prediction, accuracy = self._send_predict_request(filename)
+            prediction, probability = self._send_predict_request(filename)
         except Exception as e:
             messagebox.showerror("Prediction failed",
                                  "Failed to perform prediction, try again")
@@ -72,7 +72,7 @@ class PredictionPage(tk.Frame):
 
         self.info_label.config(text=f"Selected image: {filename}\n\n"
                                     f"Prediction: {prediction_class}\n\n"
-                                    f"Accuracy: {accuracy}")
+                                    f"Probability: {probability}")
         print("Image selected:", filename)
         self.image_to_save = image
         self.prediction_to_save = prediction_class
@@ -82,7 +82,7 @@ class PredictionPage(tk.Frame):
         # TODO add rotation mark while waiting for response from server
         with open(filename, "rb") as image_file:
             encoded_image = base64.b64encode(image_file.read()).decode('ascii')
-        data = {"image": encoded_image}
+        data = {"image": encoded_image, "image_name": filename.stem}
         headers = {"Content-Type": "application/json"}
         response = requests.post(PREDICTOR_URI, data=json.dumps(data), headers=headers)
 
@@ -92,8 +92,8 @@ class PredictionPage(tk.Frame):
             raise IOError("Failed to perform POST request")
         print(f"POST request succeeded with response: {response.json()}")
         validate_predict_response(response)
-        prediction, accuracy = extract_predict_response(response.json())
-        return prediction, accuracy
+        prediction, probability = extract_predict_response(response.json())
+        return prediction, probability
 
 
 def convert_prediction_to_class(prediction):
@@ -108,7 +108,7 @@ def convert_prediction_to_class(prediction):
 
 
 def validate_predict_response(response):
-    expected_fields = ["prediction", "accuracy"]
+    expected_fields = ["prediction", "probability"]
 
     try:
         data = response.json()
@@ -121,4 +121,4 @@ def validate_predict_response(response):
 
 
 def extract_predict_response(data):
-    return data["prediction"], data["accuracy"]
+    return data["prediction"], data["probability"]

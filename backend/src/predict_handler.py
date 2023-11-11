@@ -1,6 +1,10 @@
 from flask import jsonify
 
-from backend.src.model import load_osteoporosis_detection_model
+from backend.src.predictor import Predictor
+from backend.src.preprocessor import Preprocessor
+
+preprocessor = Preprocessor()
+predictor = Predictor()
 
 
 def handle_predict_request(request):
@@ -9,8 +13,8 @@ def handle_predict_request(request):
 
         if request_error:
             return jsonify(request_error), 400
-        prediction, accuracy = predict(request.json)
-        return jsonify({"prediction": prediction, "accuracy": accuracy}), 200
+        prediction, probability = predict(request.json)
+        return jsonify({"prediction": int(prediction), "probability": float(probability)}), 200
     except Exception as e:
         print("Failed to handle predict request due to:", e)
         return jsonify({"error": "Server encountered unexpected error"}), 500
@@ -30,7 +34,13 @@ def validate_predict_request(request):
 
 def predict(data):
     image = data["image"]
-    model = load_osteoporosis_detection_model()
-    prediction = model.predict(image)
-    return prediction
+    image_name = data["image_name"]
+    print("Received image for prediction:", image_name)
+
+    knee_rois_dict = preprocessor.extract_knee_rois(image, image_name)
+    print(f"Extracted {len(knee_rois_dict)} ROIs")
+
+    prediction, probability = predictor.predict(knee_rois_dict)
+    print(f"Predicted: {prediction} with probability: {probability}")
+    return prediction, probability
     # return 0, 0.94

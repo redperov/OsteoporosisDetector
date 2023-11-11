@@ -10,7 +10,7 @@ class HelpPage(tk.Frame):
         title_label.pack(side="top", fill="x", pady=10)
 
         help_text = ('This is a program meant to predict whether a patient suffers from Osteoporosis,'
-                     'Osteopenia or from neither. The program works on X-ray images of the knee ares.\n\n'
+                     'Osteopenia or from neither. The program works on X-ray temp_images of the knee ares.\n\n'
                      'Go to the prediction page and click the "START PREDICTING" button. '
                      'Then, choose a knee X-ray image from your computer and upload it to '
                      'the program. The program will then return a prediction on whether the patient '

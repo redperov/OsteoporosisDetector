@@ -5,7 +5,7 @@ from frontend.src.utils import load_image
 
 
 class WelcomePage(tk.Frame):
-    WELCOME_IMAGE_PATH = Path(r"C:\Users\Danny\PycharmProjects\OsteoporosisProject\frontend\resources\download.jpg")
+    WELCOME_IMAGE_PATH = Path(r"C:\Users\perov\PycharmProjects\OsteoporosisDetector\frontend\resources\download.jpg")
 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
