@@ -1,34 +1,39 @@
 import numpy as np
 import cv2
-from roboflow import Roboflow
+# from roboflow import Roboflow
 import base64
 from pathlib import Path
+import requests
+import json
 
-TEMP_IMAGES_DIR = Path("../resources/temp_images")
+from backend.predictionComponent.src.utils import validate_predict_response
+
+KNEE_ROI_DETECTION_URI = "localhost:5001/predict_knee_roi"
+OSTEOPOROSIS_PREDICTION_URI = "localhost:5001/predict_osteoporosis"
+TEMP_IMAGES_DIR = Path("../../resources/temp_images")
 RESHAPED_IMAGE_SIZE = (224, 224)
-
 
 class Preprocessor:
     def __init__(self):
-        rf = Roboflow(api_key="jeaBuRI3CrFlPbUFiwjn")
-        project = rf.workspace().project("knee-localization")
-        self.model_upper = project.version(1).model
-
-        rf = Roboflow(api_key="0Od18TnlofLc2tDnGyvg")
-        project = rf.workspace().project("knee-detector")
-        self.model_lower = project.version(1).model
+        # rf = Roboflow(api_key="jeaBuRI3CrFlPbUFiwjn")
+        # project = rf.workspace().project("knee-localization")
+        # self.model_upper = project.version(1).model
+        #
+        # rf = Roboflow(api_key="0Od18TnlofLc2tDnGyvg")
+        # project = rf.workspace().project("knee-detector")
+        # self.model_lower = project.version(1).model
 
     def extract_knee_rois(self, raw_image, image_name):
         knee_rois_dict = {}
-        image_path = self._save_temp_image(raw_image, image_name)
+        # image_path = self._save_temp_image(raw_image, image_name)
 
         if image_name[0].isupper():
             print("Extracting ROIs from:", image_name, " Using model upper")
-            bounding_boxes_dict = self._find_knee_bounding_boxes(str(image_path), self.model_upper,
+            bounding_boxes_dict = self._find_knee_bounding_boxes(raw_image, image_name, model_type="upper",
                                                                  confidence=50, overlap=50, max_rois=2)
         else:
             print("Extracting ROIs from:", image_name, " Using model lower")
-            bounding_boxes_dict = self._find_knee_bounding_boxes(str(image_path), self.model_lower,
+            bounding_boxes_dict = self._find_knee_bounding_boxes(raw_image, image_name, model_type="lower",
                                                                  confidence=50, overlap=50, max_rois=1)
         print(f"Found {len(bounding_boxes_dict)} ROIs")
         image = cv2.imread(str(image_path), cv2.IMREAD_GRAYSCALE)
@@ -55,9 +60,10 @@ class Preprocessor:
         # image = cv2.imdecode(image_arr, flags=cv2.IMREAD_GRAYSCALE)
         # return image
 
-    def _find_knee_bounding_boxes(self, image_path, model, confidence, overlap, max_rois):
-        predict_result = model.predict(image_path, confidence=confidence, overlap=overlap).json()
-        predictions = predict_result["predictions"]
+    def _find_knee_bounding_boxes(self, raw_image, image_name, model_type, confidence, overlap, max_rois):
+        # predict_result = model.predict(image_path, confidence=confidence, overlap=overlap).json()
+        # predictions = predict_result["predictions"]
+        predictions = self.__send_knee_rois_detection_request(raw_image, image_name, model_type, confidence, overlap)
         bounding_boxes_dict = {}
 
         # If there are move than two predictions, keep the top two according to the confidence score
@@ -72,6 +78,27 @@ class Preprocessor:
             bounding_boxes_dict[knee_side] = box
 
         return bounding_boxes_dict
+
+    @staticmethod
+    def __send_knee_rois_detection_request(raw_image, image_name, model_type, confidence, overlap):
+        data = {
+            "image": raw_image,
+            "image_name": image_name,
+            "model_type": model_type,
+            "confidence": confidence,
+            "overlap": overlap,
+        }
+        headers = {"Content-Type": "application/json"}
+        response = requests.post(KNEE_ROI_DETECTION_URI, data=json.dumps(data), headers=headers)
+
+        if response.status_code != 200:
+            print(f"POST request to {KNEE_ROI_DETECTION_URI} failed with status code {response.status_code} "
+                  f"and response: {response.json()}")
+            raise IOError("Failed to perform POST request")
+        print(f"POST request to {KNEE_ROI_DETECTION_URI} succeeded with response: {response.json()}")
+        validate_predict_response(response, expected_fields=["predictions"])
+
+        return response.json()["predictions"]
 
     @staticmethod
     def _extract_bounding_box_coordinates(prediction):
@@ -103,6 +130,7 @@ class Preprocessor:
         # reshaped_images_dict = {image_name: image.reshape(image.shape[0], image.shape[1], image.shape[2], 1)
         #                         for image_name, image in resized_images_dict.items()}
         # return reshaped_images_dict
+
 
 
 

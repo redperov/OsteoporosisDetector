@@ -10,8 +10,8 @@ class WelcomePage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller
-        label = tk.Label(self, text="Osteoporosis Detector", font=controller.title_font)
-        label.pack(side="top", fill="x", pady=10)
+        title_label = tk.Label(self, text="Osteoporosis Detector", font=controller.title_font)
+        title_label.pack(side="top", fill="x", pady=10)
 
         # Load an image and add it to a label
         welcome_image = load_image(WelcomePage.WELCOME_IMAGE_PATH)
@@ -21,4 +21,8 @@ class WelcomePage(tk.Frame):
 
         go_to_prediction_button = tk.Button(self, text="START PREDICTING",
                                             command=lambda: controller.show_frame("PredictionPage"))
-        go_to_prediction_button.pack()
+        go_to_prediction_button.pack(pady=10)
+
+        student_and_lecturer_label = tk.Label(self, text="Student: Danny Perov\nLecturer: Dr. Maya Herman",
+                                              wraplength=400, font=8, justify=tk.LEFT)
+        student_and_lecturer_label.pack(pady=5)

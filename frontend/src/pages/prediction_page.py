@@ -30,7 +30,11 @@ class PredictionPage(tk.Frame):
         self.save_button.pack_forget()
 
     def upload_image(self):
+        """
+        Uploads an image from the local machine and sends it to the server to make a classification prediction.
+        """
         try:
+            self.info_label.config(text="Loading...")
             filename = Path(r"C:\Users\perov\OneDrive\Desktop\N1.JPEG")
             # TODO uncomment
             # filename = filedialog.askopenfilename(initialdir="/", title="Select an Image",
@@ -39,8 +43,15 @@ class PredictionPage(tk.Frame):
         except Exception as e:
             messagebox.showerror("Error", "Error! please try again")
             print("Failed to predict on an image due to:", e)
+        # finally:
+            # self.info_label.config(text="")
 
     def save_result(self, image, prediction):
+        """
+        Saves the uploaded image in a selected directory on the local machine with the predicted classification.
+        :param image: image to predict on
+        :param prediction: classification prediction
+        """
         try:
             directory = filedialog.askdirectory()
             filename = f"{uuid.uuid4()}_{prediction}"
@@ -57,6 +68,10 @@ class PredictionPage(tk.Frame):
             print("Failed to save image due to:", e)
 
     def _display_predict_result(self, filename):
+        """
+        Sends the prediction request to the server and then displays the prediction on the window for the user to view.
+        :param filename: path to image for prediction
+        """
         if not filename:
             return
         image = Image.open(filename)
@@ -78,7 +93,13 @@ class PredictionPage(tk.Frame):
         self.prediction_to_save = prediction_class
         self.save_button.pack()
 
-    def _send_predict_request(self, filename):
+    @staticmethod
+    def _send_predict_request(filename):
+        """
+        Performs a post request to the server to make a prediction on the received image.
+        :param filename: path to image for prediction
+        :return: predicted class and prediction probability
+        """
         # TODO add rotation mark while waiting for response from server
         with open(filename, "rb") as image_file:
             encoded_image = base64.b64encode(image_file.read()).decode('ascii')
@@ -97,6 +118,11 @@ class PredictionPage(tk.Frame):
 
 
 def convert_prediction_to_class(prediction):
+    """
+    Convert the prediction to a textual class.
+    :param prediction: predicted number class
+    :return: predicted class string
+    """
     if prediction == 0:
         return "Osteoporosis"
     elif prediction == 1:
@@ -108,6 +134,10 @@ def convert_prediction_to_class(prediction):
 
 
 def validate_predict_response(response):
+    """
+    Validate that the returned response from the server for the prediction request is valid.
+    :param response: server prediction response
+    """
     expected_fields = ["prediction", "probability"]
 
     try:
@@ -121,4 +151,9 @@ def validate_predict_response(response):
 
 
 def extract_predict_response(data):
+    """
+    Extracts fields from the prediction response.
+    :param data: server response data
+    :return: prediction response fields
+    """
     return data["prediction"], data["probability"]

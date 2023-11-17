@@ -1,49 +1,20 @@
 import tkinter as tk
 
 from frontend.src.navbar import load_navbar
-from frontend.src.utils import get_window_center_coordinates, load_image
+from frontend.src.utils import get_window_center_coordinates
 from tkinter import font as tkfont
 
 from frontend.src.pages.help_page import HelpPage
 from frontend.src.pages.prediction_page import PredictionPage
 from frontend.src.pages.welcome_page import WelcomePage
 
-# from pathlib import Path
-#
-# WELCOME_IMAGE_PATH = Path(r"C:\Users\Danny\PycharmProjects\OsteoporosisProject\frontend\resources\download.jpg")
-#
-# root = tk.Tk()
-# root.title("Osteoporosis detector")
-#
-# Set window size
-
-
-#
-# load_navbar(root)
-#
-# # Set the position of the window to the center of the screen
-
-#
-# welcome_label = tk.Label(root, text="Welcome to Osteoporosis detector", font=("Arial", 20))
-# welcome_label.pack(pady=20)
-#
-# # Load an image and add it to a label
-# welcome_image = load_image(WELCOME_IMAGE_PATH)
-# image_label = tk.Label(root, image=welcome_image)
-# image_label.pack(pady=20)
-#
-# start_button = tk.Button(root, text="START PREDICTING")
-# start_button.pack(pady=20)
-#
-# root.mainloop()
+WINDOW_HEIGHT = 400
+WINDOW_WIDTH = 500
 
 
 class OSDetectionApp(tk.Tk):
 
     def __init__(self, *args, **kwargs):
-        WINDOW_HEIGHT = 400
-        WINDOW_WIDTH = 500
-
         tk.Tk.__init__(self, *args, **kwargs)
         self.title_font = tkfont.Font(family='Helvetica', size=18, weight="bold")
         self.title("Osteoporosis detector")
@@ -65,7 +36,7 @@ class OSDetectionApp(tk.Tk):
             frame = F(parent=container, controller=self)
             self.frames[page_name] = frame
 
-            # put all of the pages in the same location;
+            # put all the pages in the same location;
             # the one on the top of the stacking order
             # will be the one that is visible.
             frame.grid(row=0, column=0, sticky="nsew")
@@ -73,7 +44,9 @@ class OSDetectionApp(tk.Tk):
         self.show_frame("WelcomePage")
 
     def show_frame(self, page_name):
-        '''Show a frame for the given page name'''
+        """
+        Show a frame for the given page name.
+        """
         frame = self.frames[page_name]
         frame.tkraise()
 
