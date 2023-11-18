@@ -8,7 +8,7 @@ UPPER_MODEL_PROJECT_NAME = "knee-localization"
 LOWER_MODEL_API_KEY = "0Od18TnlofLc2tDnGyvg"
 LOWER_MODEL_PROJECT_NAME = "knee-detector"
 
-TEMP_IMAGES_DIR = Path("../../resources/temp_images")
+TEMP_IMAGES_DIR = Path(r"C:\Users\perov\PycharmProjects\OsteoporosisDetector\backend\predictionComponent\resources\temp_images")
 
 
 class KneeDetectionHandler:

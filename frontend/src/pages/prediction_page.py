@@ -34,13 +34,14 @@ class PredictionPage(tk.Frame):
         Uploads an image from the local machine and sends it to the server to make a classification prediction.
         """
         try:
-            self.info_label.config(text="Loading...")
+            # self.info_label.config(text="Loading...")
             filename = Path(r"C:\Users\perov\OneDrive\Desktop\N1.JPEG")
             # TODO uncomment
             # filename = filedialog.askopenfilename(initialdir="/", title="Select an Image",
             #                                       filetypes=(("jpeg files", "*.jpg"), ("all files", "*.*")))
             self._display_predict_result(filename)
         except Exception as e:
+            # self.info_label.config(text="")
             messagebox.showerror("Error", "Error! please try again")
             print("Failed to predict on an image due to:", e)
         # finally:

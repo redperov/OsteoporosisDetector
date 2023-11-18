@@ -2,7 +2,7 @@ from flask import jsonify
 
 from backend.predictionComponent.src.handlers.knee_detection_handler import KneeDetectionHandler
 from backend.predictionComponent.src.handlers.osteoporosis_prediction_handler import OsteoporosisPredictionHandler
-from backend.predictionComponent.src.utils import validate_predict_request
+from backend.preprocessingComponent.src.utils import validate_predict_request
 
 knee_detection_handler = KneeDetectionHandler()
 osteoporosis_prediction_handler = OsteoporosisPredictionHandler()

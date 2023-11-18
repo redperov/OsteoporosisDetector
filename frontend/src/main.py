@@ -51,6 +51,21 @@ class OSDetectionApp(tk.Tk):
         frame.tkraise()
 
 
+# def to_delete():
+#     import requests
+#     from pathlib import Path
+#     import base64
+#     import json
+#     filename = Path(r"C:\Users\perov\OneDrive\Desktop\N1.JPEG")
+#     with open(filename, "rb") as image_file:
+#         encoded_image = base64.b64encode(image_file.read()).decode('ascii')
+#     data = {"image": encoded_image, "image_name": filename.stem}
+#     headers = {"Content-Type": "application/json"}
+#     response = requests.post("http://localhost:5001/predict_osteoporosis", data=json.dumps(data), headers=headers)
+#     print(response.status_code)
+
 if __name__ == "__main__":
+    # to_delete()
     app = OSDetectionApp()
     app.mainloop()
+

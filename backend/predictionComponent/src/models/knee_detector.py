@@ -6,7 +6,7 @@ class KneeDetector:
         self.model = self._load_model(api_key, project_name)
 
     def detect(self, image_path, confidence, overlap):
-        predict_result = self.model.predict(image_path, confidence=confidence, overlap=overlap).json()
+        predict_result = self.model.predict(str(image_path), confidence=confidence, overlap=overlap).json()
         predictions = predict_result["predictions"]
         return predictions
 
