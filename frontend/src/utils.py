@@ -61,7 +61,7 @@ def convert_prediction_to_class(prediction):
     elif prediction == 1:
         return "Osteopenia"
     elif prediction == 2:
-        return "Healthy"
+        return "Normal"
     else:
         raise ValueError(f"Illegal prediction value: {prediction}")
 
