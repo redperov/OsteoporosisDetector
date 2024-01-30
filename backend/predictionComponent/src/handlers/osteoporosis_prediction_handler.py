@@ -4,7 +4,7 @@ from backend.predictionComponent.src.models.osteoporosis_predictor import Osteop
 from backend.preprocessingComponent.src.utils import decode_image
 
 # Path to trained model
-MODEL_PATH = Path(r"C:\Users\perov\PycharmProjects\OsteoporosisDetector\backend\predictionComponent\resources\models\acc_0.828.h5")
+MODEL_PATH = Path(r"C:\Users\perov\PycharmProjects\OsteoporosisDetector\backend\predictionComponent\resources\models\acc_0.69.h5")
 
 
 class OsteoporosisPredictionHandler:
@@ -15,7 +15,7 @@ class OsteoporosisPredictionHandler:
         raw_image = data["image"]
         image_name = data["image_name"]
         decoded_image = decode_image(raw_image)
-        import matplotlib.pyplot as plt
-        plt.imshow(decoded_image, cmap="gray")
-        plt.show()
+        # import matplotlib.pyplot as plt
+        # plt.imshow(decoded_image, cmap="gray")
+        # plt.show()
         return self.model.predict(decoded_image, image_name)

@@ -11,7 +11,7 @@ PORT = 5000
 predict_handler = PredictHandler()
 
 
-@app.route("/")
+@app.route("/", methods=['GET'])
 def index():
     return "Welcome to Osteoporosis Detector!\n To perform a prediction use '/predict'"
 

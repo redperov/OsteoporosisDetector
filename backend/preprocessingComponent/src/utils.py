@@ -5,6 +5,18 @@ import json
 import requests
 
 
+def send_post_request(url, data):
+    headers = {"Content-Type": "application/json"}
+    response = requests.post(url, data=json.dumps(data), headers=headers)
+
+    if response.status_code != 200:
+        print(f"POST request to {url} failed with status code {response.status_code} "
+              f"and response: {response.json()}")
+        raise IOError("Failed to perform POST request")
+    print(f"POST request to {url} succeeded with response: {response}")
+    return response
+
+
 def validate_predict_request(request, expected_fields):
     """
     Checks that the request is a valid JSON containing all the required request fields.
@@ -32,7 +44,7 @@ def validate_predict_response(response, expected_fields):
     """
     try:
         data = response.json()
-    except ValueError:
+    except Exception:
         raise ValueError("Response from server must be a JSON")
 
     for field in expected_fields:
@@ -65,18 +77,6 @@ def send_osteoporosis_predict_request(url, raw_image, image_name):
     response_data = response.json()
     prediction, probability = response_data["prediction"], response_data["probability"]
     return prediction, probability
-
-
-def send_post_request(url, data):
-    headers = {"Content-Type": "application/json"}
-    response = requests.post(url, data=json.dumps(data), headers=headers)
-
-    if response.status_code != 200:
-        print(f"POST request to {url} failed with status code {response.status_code} "
-              f"and response: {response.json()}")
-        raise IOError("Failed to perform POST request")
-    print(f"POST request to {url} succeeded with response: {response}")
-    return response
 
 
 def encode_image(image):

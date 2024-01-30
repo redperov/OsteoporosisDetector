@@ -13,15 +13,8 @@ KNEE_ROI_DETECTION_URI = "http://localhost:5001/predict_knee_roi"
 TEMP_IMAGES_DIR = Path("../../resources/temp_images")
 RESHAPED_IMAGE_SIZE = (224, 224)
 
+
 class Preprocessor:
-    # def __init__(self):
-        # rf = Roboflow(api_key="jeaBuRI3CrFlPbUFiwjn")
-        # project = rf.workspace().project("knee-localization")
-        # self.model_upper = project.version(1).model
-        #
-        # rf = Roboflow(api_key="0Od18TnlofLc2tDnGyvg")
-        # project = rf.workspace().project("knee-detector")
-        # self.model_lower = project.version(1).model
 
     def extract_knee_rois(self, raw_image, image_name):
         knee_rois_dict = {}
@@ -41,7 +34,7 @@ class Preprocessor:
 
         for knee_side, (x1, x2, y1, y2) in bounding_boxes_dict.items():
             knee_roi_image = image[y1:y2, x1:x2]
-            reshaped_knee_roi_image = self._reshape_image(knee_roi_image, RESHAPED_IMAGE_SIZE, is_rgb=True)
+            reshaped_knee_roi_image = self._reshape_image(knee_roi_image, RESHAPED_IMAGE_SIZE, is_rgb=False)
             roi_key_name = f"{image_name}_{knee_side}"
             print("ROI name:", roi_key_name)
             knee_rois_dict[roi_key_name] = reshaped_knee_roi_image
@@ -81,8 +74,6 @@ class Preprocessor:
 
         return bounding_boxes_dict
 
-
-
     @staticmethod
     def _extract_bounding_box_coordinates(prediction):
         x1 = int(prediction['x'] - prediction['width'] / 2)
@@ -100,7 +91,7 @@ class Preprocessor:
 
     @staticmethod
     def _reshape_image(image, shape, is_rgb=False):
-        reshaped_img = image.reshape(image.shape[0], image.shape[1], 1)
+        reshaped_img = image.reshape(image.shape[0], image.shape[1], 3)
         reshaped_img = reshaped_img / 255.0
         reshaped_img = reshaped_img.astype(np.float32)
         reshaped_img = cv2.resize(reshaped_img, shape)
@@ -108,11 +99,7 @@ class Preprocessor:
         if is_rgb:
             reshaped_img = cv2.cvtColor(reshaped_img, cv2.COLOR_GRAY2RGB)
         return reshaped_img
-        # resized_images_dict = {image_name: cv2.resize(image, RESHAPED_IMAGE_SIZE)
-        #                        for image_name, image in images_dict.items()}
-        # reshaped_images_dict = {image_name: image.reshape(image.shape[0], image.shape[1], image.shape[2], 1)
-        #                         for image_name, image in resized_images_dict.items()}
-        # return reshaped_images_dict
+
 
 
 

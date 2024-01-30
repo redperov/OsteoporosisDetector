@@ -7,6 +7,8 @@ import requests
 import json
 import base64
 
+from frontend.src.utils import send_predict_request, convert_prediction_to_class
+
 PREDICTOR_URI = "http://localhost:5000/predict"
 
 
@@ -17,8 +19,8 @@ class PredictionPage(tk.Frame):
         self.controller = controller
         label = tk.Label(self, text="Predictor", font=controller.title_font)
         label.pack(side="top", fill="x", pady=10)
-        upload_button = tk.Button(self, text="UPLOAD AN IMAGE", command=self.upload_image)
-        upload_button.pack()
+        self.upload_button = tk.Button(self, text="UPLOAD AN IMAGE", command=self.upload_image)
+        self.upload_button.pack()
 
         self.info_label = tk.Label(self, text="", wraplength=400, font=8, justify=tk.LEFT, pady=10)
         self.info_label.pack()
@@ -33,17 +35,20 @@ class PredictionPage(tk.Frame):
         """
         Uploads an image from the local machine and sends it to the server to make a classification prediction.
         """
+        self.info_label.config(text='Loading...')
         try:
             # self.info_label.config(text="Loading...")
-            filename = Path(r"C:\Users\perov\OneDrive\Desktop\N1.JPEG")
+            # filename = Path(r"C:\Users\perov\OneDrive\Desktop\N1.JPEG")
             # TODO uncomment
-            # filename = filedialog.askopenfilename(initialdir="/", title="Select an Image",
-            #                                       filetypes=(("jpeg files", "*.jpg"), ("all files", "*.*")))
+            filename = filedialog.askopenfilename(initialdir="/", title="Select an Image",
+                                                  filetypes=(("jpeg files", "*.jpg"), ("all files", "*.*")))
+            filename = Path(filename)
             self._display_predict_result(filename)
         except Exception as e:
             # self.info_label.config(text="")
             messagebox.showerror("Error", "Error! please try again")
             print("Failed to predict on an image due to:", e)
+            self.info_label.config(text='')
         # finally:
             # self.info_label.config(text="")
 
@@ -78,7 +83,7 @@ class PredictionPage(tk.Frame):
         image = Image.open(filename)
 
         try:
-            prediction, probability = self._send_predict_request(filename)
+            prediction, probability = send_predict_request(filename, PREDICTOR_URI)
         except Exception as e:
             messagebox.showerror("Prediction failed",
                                  "Failed to perform prediction, try again")
@@ -86,6 +91,7 @@ class PredictionPage(tk.Frame):
             return
         prediction_class = convert_prediction_to_class(prediction)
 
+        probability = round(float(probability), 3)
         self.info_label.config(text=f"Selected image: {filename}\n\n"
                                     f"Prediction: {prediction_class}\n\n"
                                     f"Probability: {probability}")
@@ -93,68 +99,3 @@ class PredictionPage(tk.Frame):
         self.image_to_save = image
         self.prediction_to_save = prediction_class
         self.save_button.pack()
-
-    @staticmethod
-    def _send_predict_request(filename):
-        """
-        Performs a post request to the server to make a prediction on the received image.
-        :param filename: path to image for prediction
-        :return: predicted class and prediction probability
-        """
-        # TODO add rotation mark while waiting for response from server
-        with open(filename, "rb") as image_file:
-            encoded_image = base64.b64encode(image_file.read()).decode('ascii')
-        data = {"image": encoded_image, "image_name": filename.stem}
-        headers = {"Content-Type": "application/json"}
-        response = requests.post(PREDICTOR_URI, data=json.dumps(data), headers=headers)
-
-        if response.status_code != 200:
-            print(f"POST request failed with status code {response.status_code} "
-                  f"and response: {response.json()}")
-            raise IOError("Failed to perform POST request")
-        print(f"POST request succeeded with response: {response.json()}")
-        validate_predict_response(response)
-        prediction, probability = extract_predict_response(response.json())
-        return prediction, probability
-
-
-def convert_prediction_to_class(prediction):
-    """
-    Convert the prediction to a textual class.
-    :param prediction: predicted number class
-    :return: predicted class string
-    """
-    if prediction == 0:
-        return "Osteoporosis"
-    elif prediction == 1:
-        return "Osteopenia"
-    elif prediction == 2:
-        return "Healthy"
-    else:
-        raise ValueError(f"Illegal prediction value: {prediction}")
-
-
-def validate_predict_response(response):
-    """
-    Validate that the returned response from the server for the prediction request is valid.
-    :param response: server prediction response
-    """
-    expected_fields = ["prediction", "probability"]
-
-    try:
-        data = response.json()
-    except ValueError:
-        raise ValueError("Response from server must be a JSON")
-
-    for field in expected_fields:
-        if field not in data:
-            raise ValueError(f"{field} is missing from response JSON")
-
-
-def extract_predict_response(data):
-    """
-    Extracts fields from the prediction response.
-    :param data: server response data
-    :return: prediction response fields
-    """
-    return data["prediction"], data["probability"]

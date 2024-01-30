@@ -19,9 +19,9 @@ class WelcomePage(tk.Frame):
         image_label.image = welcome_image
         image_label.pack(pady=20)
 
-        go_to_prediction_button = tk.Button(self, text="START PREDICTING",
+        self.go_to_prediction_button = tk.Button(self, text="START PREDICTING",
                                             command=lambda: controller.show_frame("PredictionPage"))
-        go_to_prediction_button.pack(pady=10)
+        self.go_to_prediction_button.pack(pady=10)
 
         student_and_lecturer_label = tk.Label(self, text="Student: Danny Perov\nLecturer: Dr. Maya Herman",
                                               wraplength=400, font=8, justify=tk.LEFT)
