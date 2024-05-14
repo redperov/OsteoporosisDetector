@@ -11,7 +11,7 @@ class OsteoporosisPredictor:
         y_probs = self.model.predict(np.array([image]))
         y_pred = np.argmax(y_probs[0])
         y_prob = y_probs[0][y_pred]
-        print(f"Prediction for image: {image_name} is: {y_pred} with probability: {y_prob}")
+        print(f"Classification for image: {image_name} is: {y_pred} with probability: {y_prob}")
         return y_pred, y_prob
 
     @staticmethod

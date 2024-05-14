@@ -21,7 +21,7 @@ class Predictor:
             # y_probs = self.__predict(np.array([image]))
             # y_pred = np.argmax(y_probs[0])
             # y_prob = y_probs[0][y_pred]
-            print(f"Prediction for image: {image_name} is: {y_pred} with probability: {y_prob}")
+            print(f"Classification for image: {image_name} is: {y_pred} with probability: {y_prob}")
             predictions.append((y_pred, y_prob))
 
         return max(predictions, key=lambda t: (t[0], t[1]))

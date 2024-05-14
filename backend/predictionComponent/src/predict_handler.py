@@ -47,6 +47,6 @@ def handle_osteoporosis_predict_request(request):
         prediction, probability = osteoporosis_prediction_handler.predict_osteoporosis(request.json)
         return jsonify({"prediction": int(prediction), "probability": float(probability)}), 200
     except Exception as e:
-        print("Failed to handle osteoporosis prediction request due to:", e)
+        print("Failed to handle osteoporosis classification request due to:", e)
         return jsonify({"error": "Server encountered unexpected error"}), 500
 

@@ -12,7 +12,7 @@ PORT = 5001
 
 @app.route("/")
 def welcome():
-    return "Welcome to the prediction component"
+    return "Welcome to the classification component"
 
 
 @app.route("/predict_knee_roi", methods=['POST'])

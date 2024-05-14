@@ -13,7 +13,7 @@ predict_handler = PredictHandler()
 
 @app.route("/", methods=['GET'])
 def index():
-    return "Welcome to Osteoporosis Detector!\n To perform a prediction use '/predict'"
+    return "Welcome to Osteoporosis Classifier!\n To perform a classification use '/predict'"
 
 
 @app.route("/predict", methods=['POST'])

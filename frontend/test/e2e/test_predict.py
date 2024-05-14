@@ -20,7 +20,7 @@ class TestApp:
             app.frames['WelcomePage'].go_to_prediction_button.invoke()
             info_label = app.frames['PredictionPage'].info_label
             assert not info_label.cget('text')
-            app.frames['PredictionPage'].upload_button.invoke()
+            app.frames['PredictionPage'].upload_image_button.invoke()
             time.sleep(10)
             assert 'Prediction' in info_label.cget('text') and 'Probability' in info_label.cget('text')
         finally:

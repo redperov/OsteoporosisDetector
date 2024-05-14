@@ -63,7 +63,7 @@ def convert_prediction_to_class(prediction):
     elif prediction == 2:
         return "Normal"
     else:
-        raise ValueError(f"Illegal prediction value: {prediction}")
+        raise ValueError(f"Illegal classification value: {prediction}")
 
 
 def validate_predict_response(response):

@@ -7,8 +7,9 @@ from tkinter import font as tkfont
 from frontend.src.pages.help_page import HelpPage
 from frontend.src.pages.prediction_page import PredictionPage
 from frontend.src.pages.welcome_page import WelcomePage
+from frontend.src.pages.training_page import TrainingPage
 
-WINDOW_HEIGHT = 400
+WINDOW_HEIGHT = 550
 WINDOW_WIDTH = 500
 
 
@@ -17,7 +18,7 @@ class OSDetectionApp(tk.Tk):
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
         self.title_font = tkfont.Font(family='Helvetica', size=18, weight="bold")
-        self.title("Osteoporosis detector")
+        self.title("Osteoporosis Classifier")
         load_navbar(self)
         position_right, position_top = get_window_center_coordinates(self, WINDOW_HEIGHT, WINDOW_WIDTH)
         self.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}+{position_right}+{position_top}")
@@ -31,7 +32,7 @@ class OSDetectionApp(tk.Tk):
         container.grid_columnconfigure(0, weight=1)
 
         self.frames = {}
-        for F in (WelcomePage, PredictionPage, HelpPage):
+        for F in (WelcomePage, PredictionPage, TrainingPage, HelpPage):
             page_name = F.__name__
             frame = F(parent=container, controller=self)
             self.frames[page_name] = frame
