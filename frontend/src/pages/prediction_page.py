@@ -8,11 +8,12 @@ import requests
 import json
 import base64
 import csv
+import os
 
 from frontend.src.utils import send_predict_request, convert_prediction_to_class
 
 PREDICTOR_URI = "http://localhost:5000/predict"
-DISPLAYED_IMAGE_SIZE = 230
+DISPLAYED_IMAGE_SIZE = 300
 
 class PredictionPage(tk.Frame):
 
@@ -27,12 +28,16 @@ class PredictionPage(tk.Frame):
         self.prediction_to_save = None
         self.image_path = None
         self.loaded_image_label = tk.Label(self)
-        self.loaded_image_path_label = tk.Label(self, font=8, justify=tk.LEFT)
-        self.loaded_csv_label = tk.Label(self, font=8, justify=tk.LEFT)
+        self.loaded_image_path_label = tk.Label(self, font=("Arial", 14), justify=tk.LEFT, wraplength=DISPLAYED_IMAGE_SIZE)
+        self.loaded_csv_label = tk.Label(self, font=("Arial", 14), justify=tk.LEFT, wraplength=DISPLAYED_IMAGE_SIZE)
+
+        # Patient info label and button frame
+        self.patient_info_label = tk.Label(self, text="Patient Info:", font=("Arial", 14, "bold"), pady=10)
+        self.patient_buttons_frame = tk.Frame(self, width=DISPLAYED_IMAGE_SIZE)
 
         self.upload_image_button = tk.Button(self, text="UPLOAD AN IMAGE", command=self.upload_image)
-        self.upload_csv_button = tk.Button(self, text="UPLOAD A CSV FILE", command=self.upload_csv)
-        self.fill_manually_button = tk.Button(self, text="FILL DATA MANUALLY", command=self.fill_data_manually)
+        self.upload_csv_button = tk.Button(self.patient_buttons_frame, text="UPLOAD CSV", command=self.upload_csv, width=12)
+        self.fill_manually_button = tk.Button(self.patient_buttons_frame, text="FILL MANUALLY", command=self.fill_data_manually, width=12)
         self.predict_button = tk.Button(self, text="PREDICT", command=self.predict)
         self.info_label = tk.Label(self, text="", wraplength=400, font=8, justify=tk.LEFT, pady=10)
         self.save_button = tk.Button(self, text="SAVE RESULT", command=lambda: self.save_result(
@@ -45,6 +50,8 @@ class PredictionPage(tk.Frame):
         self.loaded_image_label.pack_forget()
         self.loaded_image_path_label.pack_forget()
         self.loaded_csv_label.pack_forget()
+        self.patient_info_label.pack_forget()
+        self.patient_buttons_frame.pack_forget()
 
     def upload_image(self):
         """
@@ -62,8 +69,15 @@ class PredictionPage(tk.Frame):
             self.upload_image_button.pack_forget()
             self.loaded_image_path_label.config(text=f'Patient image:\n{filename}')
             self.loaded_image_path_label.pack()
-            self.upload_csv_button.pack(padx=80, side=tk.LEFT)
-            self.fill_manually_button.pack(side=tk.LEFT)
+            
+            # Show patient info section aligned with image width
+            self.patient_info_label.pack(pady=(10, 5))
+            self.patient_buttons_frame.pack()
+            
+            # Configure buttons to fit within image width (230px)
+            # Each button gets roughly half the width with some spacing
+            self.upload_csv_button.pack(side=tk.LEFT, padx=2)
+            self.fill_manually_button.pack(side=tk.LEFT, padx=2)
         except Exception as e:
             messagebox.showerror("Error", "Error! please try again")
             print("Failed to predict on an image due to:", e)
@@ -76,8 +90,8 @@ class PredictionPage(tk.Frame):
         if not filename:
             raise ValueError(f"Can't read a file named {filename}")
         self.patient_csv_path = filename
-        self.upload_csv_button.pack_forget()
-        self.fill_manually_button.pack_forget()
+        self.patient_info_label.pack_forget()
+        self.patient_buttons_frame.pack_forget()
         self.loaded_csv_label.config(text=f'Patient CSV file:\n {filename}')
         self.loaded_csv_label.pack(pady=10)
         self.predict_button.pack()
@@ -168,22 +182,41 @@ class PredictionPage(tk.Frame):
 
     def save_result(self, image, patient_csv, prediction):
         """
-        Saves the uploaded image in a selected directory on the local machine with the predicted classification.
+        Saves the uploaded image and patient data in a patient-specific folder within local_data directory.
         :param image: image to predict on
         :param patient_csv: patient details in a CSV file
         :param prediction: classification prediction
         """
         try:
-            directory = filedialog.askdirectory()
-            filename = f"{uuid.uuid4()}_{prediction}"
-            image_to_save_path = Path(f"{directory}/{filename}.jpg")
-            csv_to_save_path = Path(f"{directory}/{filename}.csv")
+            # Extract patient ID from CSV
+            patient_id = self.extract_patient_id(patient_csv)
+            
+            # Create local_data directory if it doesn't exist
+            local_data_dir = Path("local_data")
+            local_data_dir.mkdir(exist_ok=True)
+            
+            # Create patient-specific folder
+            patient_folder = local_data_dir / str(patient_id)
+            patient_folder.mkdir(exist_ok=True)
+            
+            # Generate filename with timestamp and prediction
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"{timestamp}_{prediction}"
+            
+            image_to_save_path = patient_folder / f"{filename}.jpg"
+            csv_to_save_path = patient_folder / f"{filename}.csv"
+            
+            # Save the image
             image.save(image_to_save_path)
 
+            # Save the CSV with prediction details
             self.add_prediction_details_to_csv(patient_csv, csv_to_save_path, prediction)
 
             messagebox.showinfo("Save succeeded",
-                                f"Image was successfully saved to: {image_to_save_path}")
+                               f"Results saved successfully for Patient {patient_id}!\n\n"
+                               f"Folder: {patient_folder}\n"
+                               f"Image: {filename}.jpg\n"
+                               f"Data: {filename}.csv")
 
             # Clear prediction result after saving the image
             self.loaded_image_label.pack_forget()
@@ -194,8 +227,30 @@ class PredictionPage(tk.Frame):
             self.save_button.pack_forget()
             self.upload_image_button.pack()
         except Exception as e:
-            messagebox.showerror("Save failed", "Failed saving image")
-            print("Failed to save image due to:", e)
+            messagebox.showerror("Save failed", f"Failed to save results: {str(e)}")
+            print("Failed to save results due to:", e)
+
+    def extract_patient_id(self, patient_csv_path):
+        """
+        Extract Patient ID from the CSV file.
+        :param patient_csv_path: path to the patient CSV file
+        :return: patient ID
+        """
+        try:
+            with open(patient_csv_path, "r") as csvfile:
+                reader = csv.reader(csvfile, delimiter=",")
+                header = next(reader)  # Read the header row
+                data_row = next(reader)  # Read the first data row
+                
+                # Find the Patient Id column index
+                patient_id_index = header.index("Patient Id")
+                patient_id = data_row[patient_id_index]
+                
+                return patient_id
+        except Exception as e:
+            print(f"Error extracting patient ID: {e}")
+            # Fallback to timestamp if patient ID extraction fails
+            return f"Unknown_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
     def add_prediction_details_to_csv(self, original_csv_path, modified_csv_path, prediction):
         with open(original_csv_path, "r") as csvfile:
@@ -270,7 +325,7 @@ class PredictionPage(tk.Frame):
 
         probability = round(float(probability), 3)
         self.info_label.config(text=f"Prediction: {prediction_class}\n\n"
-                                    f"Probability: {probability}")
+                                    f"Accuracy: {probability}")
         print("Image selected:", filename)
         self.image_to_save = image
         self.prediction_to_save = prediction_class

@@ -1,0 +1,42 @@
+# Core Python Libraries
+numpy>=1.21.0
+requests>=2.25.1
+Pillow>=8.2.0
+pathlib2>=2.3.6; python_version<"3.4"
+
+# Web Framework
+Flask>=2.0.1
+
+# Computer Vision and Image Processing
+opencv-python>=4.5.2.54
+
+# Machine Learning and Deep Learning
+tensorflow>=2.6.0
+tensorflow-hub>=0.12.0
+
+# Object Detection
+roboflow>=0.2.29
+
+# Testing
+pytest>=6.2.4
+
+# Development and Utilities
+uuid>=1.30; python_version<"3.7"
+base64>=1.0.0; python_version<"3.0"
+json5>=0.9.6; python_version<"3.0"
+
+# GUI Framework (usually included with Python but listing for completeness)
+# tkinter - included with Python standard library
+
+# CSV handling (included with Python standard library)
+# csv - included with Python standard library
+
+# Date/Time handling (included with Python standard library)  
+# datetime - included with Python standard library
+
+# Math operations (included with Python standard library)
+# math - included with Python standard library
+
+# File operations (included with Python standard library)
+# subprocess - included with Python standard library
+# time - included with Python standard library

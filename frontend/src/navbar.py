@@ -10,6 +10,10 @@ def load_navbar(root):
     home_button.pack(side=tk.LEFT)
     home_button.pack(padx=4, pady=2)
 
+    about_button = tk.Button(navbar_frame, text='ABOUT', command=lambda: root.show_frame("AboutPage"))
+    about_button.pack(side=tk.LEFT)
+    about_button.pack(padx=4, pady=2)
+
     help_button = tk.Button(navbar_frame, text='HELP', command=lambda: root.show_frame("HelpPage"))
     help_button.pack(side=tk.LEFT)
     help_button.pack(pady=2)
