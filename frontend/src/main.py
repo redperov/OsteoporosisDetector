@@ -10,8 +10,8 @@ from frontend.src.pages.role_page import RolePage
 from frontend.src.pages.welcome_page import WelcomePage
 from frontend.src.pages.training_page import TrainingPage
 
-WINDOW_HEIGHT = 650
-WINDOW_WIDTH = 500
+WINDOW_HEIGHT = 800
+WINDOW_WIDTH = 550
 
 
 class OSDetectionApp(tk.Tk):

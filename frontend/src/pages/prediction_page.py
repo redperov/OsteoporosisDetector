@@ -26,6 +26,7 @@ class PredictionPage(tk.Frame):
         self.image_to_save = None
         self.patient_csv_path = None
         self.prediction_to_save = None
+        self.probability_to_save = None
         self.image_path = None
         self.loaded_image_label = tk.Label(self)
         self.loaded_image_path_label = tk.Label(self, font=("Arial", 14), justify=tk.LEFT, wraplength=DISPLAYED_IMAGE_SIZE)
@@ -35,18 +36,27 @@ class PredictionPage(tk.Frame):
         self.patient_info_label = tk.Label(self, text="Patient Info:", font=("Arial", 14, "bold"), pady=10)
         self.patient_buttons_frame = tk.Frame(self, width=DISPLAYED_IMAGE_SIZE)
 
-        self.upload_image_button = tk.Button(self, text="UPLOAD AN IMAGE", command=self.upload_image)
-        self.upload_csv_button = tk.Button(self.patient_buttons_frame, text="UPLOAD CSV", command=self.upload_csv, width=12)
-        self.fill_manually_button = tk.Button(self.patient_buttons_frame, text="FILL MANUALLY", command=self.fill_data_manually, width=12)
-        self.predict_button = tk.Button(self, text="PREDICT", command=self.predict)
+        self.upload_image_button = tk.Button(self, text="UPLOAD AN IMAGE", command=self.upload_image,
+                                             bg='white', fg='black', relief='raised')
+        self.upload_csv_button = tk.Button(self.patient_buttons_frame, text="UPLOAD CSV", command=self.upload_csv, width=12,
+                                          bg='white', fg='black', relief='raised')
+        self.fill_manually_button = tk.Button(self.patient_buttons_frame, text="FILL MANUALLY", command=self.fill_data_manually, width=12,
+                                             bg='white', fg='black', relief='raised')
+        self.predict_button = tk.Button(self, text="PREDICT", command=self.predict,
+                                       bg='white', fg='black', relief='raised')
         self.info_label = tk.Label(self, text="", wraplength=400, font=8, justify=tk.LEFT, pady=10)
         self.save_button = tk.Button(self, text="SAVE RESULT", command=lambda: self.save_result(
-            self.image_to_save, self.patient_csv_path, self.prediction_to_save))
+            self.image_to_save, self.patient_csv_path, self.prediction_to_save, self.probability_to_save),
+                                    bg='white', fg='black', relief='raised', 
+                                    activebackground='#e0e0e0')
+        self.clear_button = tk.Button(self, text="CLEAR ALL", command=self.clear_all,
+                                     bg='white', fg='black', relief='raised')
 
         self.upload_image_button.pack()
         self.predict_button.pack_forget()
         self.info_label.pack_forget()
         self.save_button.pack_forget()
+        self.clear_button.pack_forget()
         self.loaded_image_label.pack_forget()
         self.loaded_image_path_label.pack_forget()
         self.loaded_csv_label.pack_forget()
@@ -78,6 +88,10 @@ class PredictionPage(tk.Frame):
             # Each button gets roughly half the width with some spacing
             self.upload_csv_button.pack(side=tk.LEFT, padx=2)
             self.fill_manually_button.pack(side=tk.LEFT, padx=2)
+            
+            # Force UI refresh to make CSV buttons immediately clickable
+            self.update_idletasks()
+            self.update()
         except Exception as e:
             messagebox.showerror("Error", "Error! please try again")
             print("Failed to predict on an image due to:", e)
@@ -94,7 +108,12 @@ class PredictionPage(tk.Frame):
         self.patient_buttons_frame.pack_forget()
         self.loaded_csv_label.config(text=f'Patient CSV file:\n {filename}')
         self.loaded_csv_label.pack(pady=10)
+        self.clear_button.pack(pady=(10, 2))
         self.predict_button.pack()
+        
+        # Force UI refresh to make buttons immediately clickable
+        self.update_idletasks()
+        self.update()
 
     def fill_data_manually(self):
         popup_window = tk.Toplevel()
@@ -149,7 +168,8 @@ class PredictionPage(tk.Frame):
         # Create submit button
         submit_frame = tk.Frame(scrollable_frame)
         submit_button = tk.Button(submit_frame, text="SUBMIT",
-                                  command=lambda: self.submit_patient_details(features, widgets, popup_window))
+                                  command=lambda: self.submit_patient_details(features, widgets, popup_window),
+                                  bg='white', fg='black', relief='raised')
         submit_button.grid(row=0, column=0, padx=10, pady=10)
         submit_frame.pack(fill="x")
 
@@ -173,19 +193,22 @@ class PredictionPage(tk.Frame):
         self.info_label.pack()
         self.info_label.config(text="Loading...")
         try:
-            self._display_predict_result(self.image_path)
+            success = self._display_predict_result(self.image_path)
+            if success:
+                self.predict_button.pack_forget()
         except Exception as e:
-            self.info_label.config(text="")
-            raise e
-        # self.info_label.config(text="")
-        self.predict_button.pack_forget()
+            self.info_label.config(text="", fg="#000000", font=("Arial", 8))
+            # Keep the predict button visible when prediction fails
+            print(f"Prediction failed in predict method: {e}")
+            # Don't re-raise the exception to avoid breaking the UI
 
-    def save_result(self, image, patient_csv, prediction):
+    def save_result(self, image, patient_csv, prediction, probability):
         """
         Saves the uploaded image and patient data in a patient-specific folder within local_data directory.
         :param image: image to predict on
         :param patient_csv: patient details in a CSV file
         :param prediction: classification prediction
+        :param probability: prediction accuracy/probability
         """
         try:
             # Extract patient ID from CSV
@@ -210,7 +233,7 @@ class PredictionPage(tk.Frame):
             image.save(image_to_save_path)
 
             # Save the CSV with prediction details
-            self.add_prediction_details_to_csv(patient_csv, csv_to_save_path, prediction)
+            self.add_prediction_details_to_csv(patient_csv, csv_to_save_path, prediction, probability)
 
             messagebox.showinfo("Save succeeded",
                                f"Results saved successfully for Patient {patient_id}!\n\n"
@@ -225,6 +248,7 @@ class PredictionPage(tk.Frame):
             self.info_label.config(text="")
             self.info_label.pack_forget()
             self.save_button.pack_forget()
+            self.clear_button.pack_forget()
             self.upload_image_button.pack()
         except Exception as e:
             messagebox.showerror("Save failed", f"Failed to save results: {str(e)}")
@@ -252,7 +276,7 @@ class PredictionPage(tk.Frame):
             # Fallback to timestamp if patient ID extraction fails
             return f"Unknown_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
-    def add_prediction_details_to_csv(self, original_csv_path, modified_csv_path, prediction):
+    def add_prediction_details_to_csv(self, original_csv_path, modified_csv_path, prediction, probability):
         with open(original_csv_path, "r") as csvfile:
             reader = csv.reader(csvfile, delimiter=",")
             header = next(reader)  # Skip the header row (if present)
@@ -260,6 +284,7 @@ class PredictionPage(tk.Frame):
             # Add new columns
             header.append("Prediction Date")
             header.append("Prediction")
+            header.append("Prediction Accuracy")
 
             # Create a list to store rows with the updated column
             updated_rows = []
@@ -271,6 +296,7 @@ class PredictionPage(tk.Frame):
             for row in reader:
                 row.append(current_date)
                 row.append(prediction)
+                row.append(probability)
 
                 # Add the updated row to the list
                 updated_rows.append(row)
@@ -307,26 +333,96 @@ class PredictionPage(tk.Frame):
         """
         Sends the prediction request to the server and then displays the prediction on the window for the user to view.
         :param filename: path to image for prediction
+        :return: True if prediction succeeded, False if it failed
         """
         if not filename:
-            return
+            return False
         image = Image.open(filename)
         try:
             # TODO undo
-            # prediction, probability = send_predict_request(filename, PREDICTOR_URI)
-            prediction, probability = 2, 0.8
+            prediction, probability = send_predict_request(filename, PREDICTOR_URI)
+            # prediction, probability = 2, 0.8
         except Exception as e:
             messagebox.showerror("Prediction failed",
                                  "Failed to perform prediction, try again")
             print(f"Failed to predict due to:", e)
-            self.info_label.config(text='')
-            return
+            self.info_label.config(text='', fg="#000000", font=("Arial", 8))
+            return False
         prediction_class = convert_prediction_to_class(prediction)
 
         probability = round(float(probability), 3)
-        self.info_label.config(text=f"Prediction: {prediction_class}\n\n"
-                                    f"Accuracy: {probability}")
+        
+        # Set color based on prediction class
+        color_map = {
+            "Normal": "#008000",      # Green
+            "Osteopenia": "#FF8C00",  # Orange  
+            "Osteoporosis": "#FF0000" # Red
+        }
+        prediction_color = color_map.get(prediction_class, "#000000")  # Default to black
+        
+        self.info_label.config(
+            text=f"Prediction: {prediction_class}\n\nAccuracy: {probability}",
+            fg=prediction_color,
+            font=("Arial", 12, "bold")
+        )
         print("Image selected:", filename)
         self.image_to_save = image
         self.prediction_to_save = prediction_class
-        self.save_button.pack()
+        self.probability_to_save = probability
+        self.save_button.pack(pady=(10, 20))
+        
+        # Explicitly configure button styling to ensure white background
+        self.save_button.config(bg='#FFFFFF', fg='#000000', relief='raised', 
+                               activebackground='#e0e0e0',
+                               bd=2, highlightthickness=0)
+        
+        # Force UI refresh to make result and save button immediately visible
+        self.update_idletasks()
+        self.update()
+        
+        return True
+
+    def clear_all(self):
+        """
+        Clears all input data and resets the interface to allow new predictions.
+        """
+        # Reset all stored data
+        self.image_to_save = None
+        self.patient_csv_path = None
+        self.prediction_to_save = None
+        self.probability_to_save = None
+        self.image_path = None
+        
+        # Hide all UI elements except the upload image button
+        self.loaded_image_label.pack_forget()
+        self.loaded_image_path_label.pack_forget()
+        self.loaded_csv_label.pack_forget()
+        self.patient_info_label.pack_forget()
+        self.patient_buttons_frame.pack_forget()
+        self.predict_button.pack_forget()
+        self.info_label.pack_forget()
+        self.save_button.pack_forget()
+        self.clear_button.pack_forget()
+        
+        # Clear any displayed content and reset formatting
+        self.info_label.config(text="", fg="#000000", font=("Arial", 8))
+        # Safely clear the image label by recreating it
+        self.loaded_image_label.destroy()
+        self.loaded_image_label = tk.Label(self)
+        self.loaded_image_path_label.config(text="")
+        self.loaded_csv_label.config(text="")
+        
+        # Show the upload image button to start over
+        self.upload_image_button.pack()
+        
+        # Force UI refresh to make buttons visible immediately
+        self.update_idletasks()
+        self.update()
+        
+        # Clean up temporary CSV file if it exists
+        temp_csv_path = "temp_patient_details.csv"
+        if os.path.exists(temp_csv_path):
+            try:
+                os.remove(temp_csv_path)
+            except Exception as e:
+                print(f"Warning: Could not remove temporary file {temp_csv_path}: {e}")

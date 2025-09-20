@@ -4,7 +4,7 @@ from backend.predictionComponent.src.models.osteoporosis_predictor import Osteop
 from backend.preprocessingComponent.src.utils import decode_image
 
 # Path to trained model
-MODEL_PATH = Path(r"C:\Users\perov\PycharmProjects\OsteoporosisDetector\backend\predictionComponent\resources\models\acc_0.69.h5")
+MODEL_PATH = Path(r"/Users/danny.p/git/OsteoporosisDetector/backend/predictionComponent/resources/models/acc_0.632_2025_09_20_145530.h5")
 
 
 class OsteoporosisPredictionHandler:

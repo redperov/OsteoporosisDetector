@@ -8,7 +8,7 @@ UPPER_MODEL_PROJECT_NAME = "knee-localization"
 LOWER_MODEL_API_KEY = "0Od18TnlofLc2tDnGyvg"
 LOWER_MODEL_PROJECT_NAME = "knee-detector"
 
-TEMP_IMAGES_DIR = Path(r"C:\Users\perov\PycharmProjects\OsteoporosisDetector\backend\predictionComponent\resources\temp_images")
+TEMP_IMAGES_DIR = Path(r"/Users/danny.p/git/OsteoporosisDetector/backend/predictionComponent/resources/temp_images")
 
 
 class KneeDetectionHandler:
@@ -32,6 +32,10 @@ class KneeDetectionHandler:
     @staticmethod
     def _save_temp_image(encoded_image, image_name):
         image_bytes = base64.b64decode(encoded_image)
+        
+        # Create the temp images directory if it doesn't exist
+        TEMP_IMAGES_DIR.mkdir(parents=True, exist_ok=True)
+        
         image_path = TEMP_IMAGES_DIR / f"{image_name}.jpg"
 
         with open(image_path, "wb") as temp_image_file:

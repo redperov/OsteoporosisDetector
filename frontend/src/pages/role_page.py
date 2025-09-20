@@ -206,26 +206,39 @@ class RolePage(tk.Frame):
                                   font=("Arial", 12), fg="red")
             error_label.pack(pady=10)
         
-        # Display diagnosis result
-        diagnosis_label = tk.Label(results_window, text=f"Diagnosis: {diagnosis}", 
-                                  font=("Arial", 14, "bold"), fg="green")
+        # Read patient data to get prediction accuracy
+        try:
+            patient_data = self.read_patient_data(csv_path)
+            prediction_accuracy = patient_data.get("Prediction Accuracy", "N/A")
+        except:
+            prediction_accuracy = "N/A"
+        
+        # Display diagnosis result with accuracy
+        diagnosis_text = f"Diagnosis: {diagnosis}"
+        if prediction_accuracy != "N/A":
+            try:
+                accuracy_float = float(prediction_accuracy)
+                diagnosis_text += f"\nAccuracy: {accuracy_float:.1%}"
+            except:
+                diagnosis_text += f"\nAccuracy: {prediction_accuracy}"
+        
+        diagnosis_label = tk.Label(results_window, text=diagnosis_text, 
+                                  font=("Arial", 14, "bold"), fg="green", justify=tk.CENTER)
         diagnosis_label.pack(pady=10)
         
         # Display file information
         info_text = f"Image: {image_path.name}\nData: {csv_path.name}\nDate: {self.extract_date_from_filename(image_path.name)}"
         info_label = tk.Label(results_window, text=info_text, 
-                             font=("Arial", 14), justify=tk.LEFT)
+                             font=("Arial", 12), justify=tk.LEFT)
         info_label.pack(pady=10)
         
         # Button to view patient details
-        try:
-            patient_data = self.read_patient_data(csv_path)
+        if prediction_accuracy != "N/A":  # We already have patient_data
             view_details_button = tk.Button(results_window, text="View Patient Details", 
                                           font=("Arial", 14),
                                           command=lambda: self.show_patient_details_popup(patient_id, patient_data))
             view_details_button.pack(pady=15)
-            
-        except Exception as e:
+        else:
             error_label = tk.Label(results_window, text="Error loading patient data", 
                                   font=("Arial", 14), fg="red")
             error_label.pack(pady=5)
